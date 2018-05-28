@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>面向对象轮播图</title>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-latest.js"></script>        
+    <style>
+        .box {
+            width: 200px;
+            height: 200px;
+            border: 1px solid #f00;
+            margin: 0px auto;
+            position: relative;
+            overflow: hidden;
+            
+        }
+        .a,.b,.c {
+            padding: 0;
+            width: 200px;
+            height: 200px;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        .a {
+            background: green ;
+        }
+        .b {
+            background: red;
+        }
+        .c {
+            background: blue;
+        }
+        .box .active {
+            z-index: 1;
+        }
+        .dot {
+            margin-left: 700px;
+            margin-top: 30px;
+        }
+        .dot a {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 1px solid firebrick;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 20px;
+            cursor: pointer;
+            margin-left: 15px;
+            text-decoration: none;
+        }
+        .dot a.active {
+            background: deeppink;
+        }
+    </style>
+</head>
+<body>
+    <div id="slide">
+        <button id="prev">prev</button>
+        <div class="box">
+            <diV class="a active"></diV>
+            <diV class="b"></diV>
+            <diV class="c"></diV>
+        </div>
+        <div class="dot">
+            <a href="#" class="active">1</a>
+            <a href="#">2</a>
+            <a href="#">3</a>
+        </div>
+        <button id="next">next</button>
+    </div>
+    
+    <script>
+        function Slide() {
+            let index = 0;
+            let that = this;
+            this.timer = null;
+
+            this.init = function() {
+                this.clearTimer();    //清除定时器写成一个方法
+                this.autoSlide();
+                this.dotEvent();
+                this.turnEvent();
+                this.timerCtrlEvent();
+            }
+
+            //用来清除定时器
+            this.clearTimer = function() {
+                clearInterval(this.timer);
+            }
+
+            //触发事件(鼠标滑入滑出排除，因不需要，不会造成轮播bug)时先把timer清除，再异步添加timer，
+            //此方法用于利用事件进行轮播是排除定时器的干扰
+            this.asyncTimer = function() {
+                this.clearTimer();  //首先同步清除定时器;
+
+                setTimeout(function() {//此处定时器用来异步重新执行自动轮播，也就是触发事件时先清除自动轮播，防止它对轮播的干扰，因为这个setTimeout是异步的，所以会事件执行完后才会执行，所以又能正常的自动轮播了
+                    that.autoSlide();
+                });
+            }
+
+            this.move = function() {
+                $('.box div').removeClass('active');
+                $('.dot a').removeClass('active');
+                $('.box div').eq(index).addClass('active');
+                $('.dot a').eq(index).addClass('active');
+            }
+
+            this.next = function() {
+                index++;   //++  --操作提前，如果放在下面的话，就会造成轮播图第一张实际停留了4s(自动轮播间隔为2s),出现原因是setInterval第一次执行需要间隔2s后开始执行，而且++滞后，所以开始是index=0，2s后定时器开始执行又播放了第一张，再间隔2s后才执行第二张，所以第一张(后续无此bug)停留了4s,解决方案，咱们++提前，首次index就变成了1，让定时器上来就轮播第二张
+                if(index > 2) {
+                    index = 0;
+                }
+                this.move();
+            }
+            this.prev = function() {
+                index--;   //原理同上
+                if(index < 0) {
+                    index = 2;
+                }
+                this.move();
+            }
+
+            this.autoSlide = function() {
+                this.timer = setInterval(function() {
+                    that.next();
+                }, 2000);
+            }
+
+            this.dotEvent = function() {
+                $('.dot a').on('click', function(e) {
+                    e.preventDefault();
+                    that.asyncTimer();   //触发事件时调用，暂时清除定时器，事件执行完后在加上定时器，使之正常自动轮播
+                    let i = $(this).index();
+                    index = i;
+                    that.move();
+                })
+            }
+            this.turnEvent = function() {
+                $('#next').on("click",function() {
+                    that.asyncTimer();   //触发事件时调用，暂时清除定时器，事件执行完后在加上定时器，使之正常自动轮播
+                    that.next();
+                })
+                $("#prev").on("click",function() {
+                    that.asyncTimer();   //触发事件时调用，暂时清除定时器，事件执行完后在加上定时器，使之正常自动轮播
+                    that.prev();
+                })
+            }
+            
+            this.timerCtrlEvent = function() {
+                $('.box').on('mouseover',function() {
+                    clearInterval(that.timer);
+                })
+                $('.box').on('mouseout',function() {
+                    that.autoSlide();
+                })
+            }
+
+            this.refresh = function() {
+                this.init();
+            }
+
+            this.init();
+        }
+
+        new Slide()
+    </script>
+</body>
+</html>
