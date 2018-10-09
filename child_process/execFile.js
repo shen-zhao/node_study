@@ -1,4 +1,4 @@
-const { execFile } = require('child_process');
+const execFile = require('child_process').execFile;
 
 // const child = execFile('node', ['--version'], (error, stdout, stderr) => {
 //     if (error) {
@@ -6,8 +6,9 @@ const { execFile } = require('child_process');
 //     }
 //     console.log(stdout);
 // });
-
-execFile('/Users/yp-tc-m-2687/Documents/f2e/my_test/node_study/child_process/test.sh', (error, stdout, stderr) => {
+execFile('./test.sh', { //此处注意读写权限问题
+    cwd: __dirname
+}, (error, stdout, stderr) => {
     if (error) {
         return console.log('???', error);
     }
