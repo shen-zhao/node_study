@@ -306,3 +306,72 @@ if (!fs.existsSync(path.resolve(__dirname, dirname1))) {
 fs.renameSync(dirname1, dirname2);
 
 ```
+
+## 获取文件状态
+
+### fs.stat(path, callback) fs.statSync(path)
+### fs.fstat(fd, callback) fs.fstatSync(fd)
+### fs.lstat(path, callback) fs.lstatSync(path)
+
+区别：
+- fs.stat() vs fs.fstat()：传文件路径 vs 文件句柄。
+- fs.stat() vs fs.lstat()：如果文件是软链接，那么fs.stat()返回目标文件的状态，fs.lstat()返回软链接本身的状态。
+*主要关注Class: fs.Stats。*
+首先是方法：
+- stats.isFile() -- 是否文件
+- stats.isDirectory() -- 是否目录
+- stats.isBlockDevice() -- 什么鬼
+- stats.isCharacterDevice() -- 什么鬼
+- stats.isSymbolicLink() (only valid with fs.lstat()) -- 什么鬼
+- stats.isFIFO() -- 什么鬼
+- stats.isSocket() -- 是不是socket文件
+
+官网例子：
+```json
+{
+  dev: 2114,
+  ino: 48064969,
+  mode: 33188,
+  nlink: 1,
+  uid: 85,
+  gid: 100,
+  rdev: 0,
+  size: 527,
+  blksize: 4096,
+  blocks: 8,
+  atime: Mon, 10 Oct 2011 23:24:11 GMT, // 访问时间
+  mtime: Mon, 10 Oct 2011 23:24:11 GMT,  // 文件内容修改时间
+  ctime: Mon, 10 Oct 2011 23:24:11 GMT,  // 文件状态修改时间
+  birthtime: Mon, 10 Oct 2011 23:24:11 GMT  // 创建时间
+}
+```
+- atime：Access Time // 访问时间
+- mtime:: Modified Time // 文件内容修改时间
+- ctime: Changed Time. // 文件状态修改时间，比如修改文件所有者、修改权限、重命名等
+- birthtime: Birth Time // 创建时间。在某些系统上是不可靠的，因为拿不到。
+
+例子
+```javascript
+const fs = require('fs');
+
+const getTimeDesc = function(d){
+    return [d.getFullYear(), d.getMonth()+1, d.getDate()].join('-') + ' ' + [d.getHours(), d.getMinutes(), d.getSeconds()].join(':');
+};
+
+//异步
+fs.stat('./README.md', function(err, stats){
+    console.log('异步获取');
+    console.log('文件大小: ' + stats.size);
+    console.log('创建时间: ' + getTimeDesc(stats.birthtime));
+    console.log('访问时间: ' + getTimeDesc(stats.atime));
+    console.log('修改时间: ' + getTimeDesc(stats.mtime));
+});
+
+//同步
+const stats = fs.statSync('./fileState.js');
+console.log('同步获取');
+console.log('文件大小: ' + stats.size);
+console.log('创建时间: ' + getTimeDesc(stats.birthtime));
+console.log('访问时间: ' + getTimeDesc(stats.atime));
+console.log('修改时间: ' + getTimeDesc(stats.mtime));
+```
